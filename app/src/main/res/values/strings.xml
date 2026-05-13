@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Application Led Control</string>
+    <string name="main_title">Управление Bluetooth</string>
+    <string name="main_subtitle">Нажмите «Подключить», чтобы открыть список устройств, доступных прямо сейчас.</string>
+    <string name="device_section_title">Подключение</string>
+    <string name="actions_title">Команды</string>
+    <string name="connect_device">Подключить</string>
+    <string name="action_all_on">Включить всё</string>
+    <string name="action_auto">Авто-режим</string>
+    <string name="action_all_off">Выключить всё</string>
+    <string name="device_list_title">Доступные устройства</string>
+    <string name="device_list_subtitle">Список обновляется автоматически. Нажмите на устройство, чтобы подключиться.</string>
+    <string name="refresh_devices">Обновить сейчас</string>
+    <string name="paired_devices_hint">Идёт поиск доступных Bluetooth-устройств.</string>
+    <string name="scanning_devices">Идёт поиск доступных Bluetooth-устройств.</string>
+    <string name="bluetooth_disabled">Bluetooth выключен.</string>
+    <string name="no_paired_devices">Пока ничего не найдено.</string>
+    <string name="unknown_device_name">Без названия</string>
+    <string name="bluetooth_not_supported">Bluetooth на этом устройстве недоступен.</string>
+    <string name="permission_needed_for_devices">Нужны разрешения Bluetooth и сканирования, чтобы показать список устройств.</string>
+    <string name="status_device_not_connected">Статус: устройство не подключено</string>
+    <string name="status_permissions_granted">Статус: разрешения получены</string>
+    <string name="status_permissions_missing">Статус: разрешения не выданы</string>
+    <string name="status_connected">Статус: подключено к %1$s</string>
+    <string name="connection_success">Соединение установлено</string>
+    <string name="connection_error">Ошибка подключения</string>
+    <string name="select_device_first">Сначала подключитесь к устройству</string>
+    <string name="floor_control_title">Управление этажами</string>
+    <string name="action_floor_on">Включить весь этаж</string>
+</resources>
