@@ -1,17 +1,45 @@
 <resources>
     <style name="Theme.ApplicationLedControl" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Strictly Monochrome Blue Theme -->
         <item name="colorPrimary">@color/brand_primary</item>
-        <item name="colorOnPrimary">@color/on_primary</item>
-        <item name="colorSecondary">@color/brand_secondary</item>
-        <item name="colorOnSecondary">@color/on_secondary</item>
-        <item name="colorTertiary">@color/brand_tertiary</item>
-        <item name="colorOnTertiary">@color/on_tertiary</item>
-        <item name="android:statusBarColor">@color/app_background</item>
-        <item name="android:navigationBarColor">@color/app_background</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorPrimaryContainer">@color/brand_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/on_primary_container</item>
+        <item name="colorSecondary">@color/brand_primary</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="colorSecondaryContainer">@color/brand_primary_container</item>
+        <item name="colorOnSecondaryContainer">@color/on_primary_container</item>
+        <item name="colorTertiary">@color/brand_primary</item>
+        <item name="colorOnTertiary">@color/white</item>
+        <item name="colorTertiaryContainer">@color/brand_primary_container</item>
+        <item name="colorOnTertiaryContainer">@color/on_primary_container</item>
+        <item name="android:windowBackground">@color/app_background</item>
+        <item name="colorSurface">@color/app_background</item>
+        <item name="colorOnSurface">@color/on_surface_main</item>
+        <item name="colorSurfaceVariant">@color/surface_panel</item>
+        <item name="colorOnSurfaceVariant">@color/on_surface_sub</item>
+        <item name="colorOutline">#E0E0E0</item>
+        <item name="colorOutlineVariant">@color/outline_variant</item>
     </style>
 
-    <style name="Theme.ApplicationLedControl.Dialog" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="android:statusBarColor">@color/app_background</item>
-        <item name="android:navigationBarColor">@color/app_background</item>
+    <!-- Dialog theme for DeviceListActivity -->
+    <style name="Theme.ApplicationLedControl.Dialog" parent="Theme.Material3.DayNight.Dialog">
+        <item name="colorPrimary">@color/brand_primary</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">@color/brand_primary</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="colorSecondaryContainer">@color/brand_primary_container</item>
+        <item name="colorOnSecondaryContainer">@color/on_primary_container</item>
+        <item name="colorTertiary">@color/brand_primary</item>
+        <item name="colorOnTertiary">@color/white</item>
+        <item name="colorTertiaryContainer">@color/brand_primary_container</item>
+        <item name="colorOnTertiaryContainer">@color/on_primary_container</item>
+        <item name="android:windowBackground">@color/app_background</item>
+        <item name="colorSurface">@color/app_background</item>
+        <item name="colorOnSurface">@color/on_surface_main</item>
+        <item name="colorSurfaceVariant">@color/surface_panel</item>
+        <item name="colorOnSurfaceVariant">@color/on_surface_sub</item>
+        <item name="colorOutline">@color/outline_variant</item>
+        <item name="colorOutlineVariant">@color/outline_variant</item>
     </style>
 </resources>

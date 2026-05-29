@@ -1,26 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="brand_primary">#1E3A8A</color>
-    <color name="brand_secondary">#0F766E</color>
-    <color name="brand_tertiary">#7C3AED</color>
+    <!-- Professional Monochrome Blue Palette -->
+    <color name="brand_primary">#1976D2</color>
+    <color name="brand_primary_container">#D6E8FF</color>
+    <color name="on_primary_container">#0D47A1</color>
+    <color name="outline_variant">#D0D7E2</color>
+    
+    <!-- Uniform Background Colors -->
+    <color name="app_background">#F8F9FA</color>
+    <color name="surface_panel">#FFFFFF</color>
+    
+    <!-- Text Colors -->
+    <color name="on_surface_main">#212121</color>
+    <color name="on_surface_sub">#616161</color>
 
-    <color name="on_primary">#FFFFFF</color>
-    <color name="on_secondary">#FFFFFF</color>
-    <color name="on_tertiary">#FFFFFF</color>
-
-    <color name="app_background">#F4F7FB</color>
-    <color name="surface">#FFFFFF</color>
-    <color name="card_stroke">#D7DFEA</color>
-    <color name="list_divider">#E6EDF5</color>
-
-    <color name="on_background">#0F172A</color>
-    <color name="on_background_secondary">#475569</color>
-    <color name="on_surface">#0F172A</color>
-    <color name="on_surface_secondary">#64748B</color>
-
-    <color name="error">#DC2626</color>
-    <color name="on_error">#FFFFFF</color>
-
-    <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="black">#FF000000</color>
+
+    <!-- Preset Colors for the squares (LED control) -->
+    <color name="preset_white">#FFFFFF</color>
+    <color name="preset_green">#4CAF50</color>
+    <color name="preset_yellow">#FFEB3B</color>
+    <color name="preset_red">#F44336</color>
 </resources>
