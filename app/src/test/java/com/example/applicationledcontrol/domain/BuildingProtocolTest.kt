@@ -9,19 +9,19 @@ class BuildingProtocolTest {
 
     @Test
     fun floorCommandsMatchFirmware() {
-        assertEquals("10001", BuildingProtocol.getFloorCommand(1))
-        assertEquals("10019", BuildingProtocol.getFloorCommand(19))
+        assertEquals("F1W0S1", BuildingProtocol.getFloorCommand(1))
+        assertEquals("F19W0S1", BuildingProtocol.getFloorCommand(19))
     }
 
     @Test
     fun roomCommandsMatchFirmware() {
-        assertEquals("111", BuildingProtocol.getRoomCommand(1, 1))
-        assertEquals("118", BuildingProtocol.getRoomCommand(1, 8))
-        assertEquals("81", BuildingProtocol.getRoomCommand(2, 1))
-        assertEquals("90", BuildingProtocol.getRoomCommand(2, 2))
-        assertEquals("160", BuildingProtocol.getRoomCommand(3, 1))
-        assertEquals("1510", BuildingProtocol.getRoomCommand(19, 8))
-        assertEquals("218", BuildingProtocol.getRoomOffCommand(1, 8))
+        assertEquals("F1W1S1", BuildingProtocol.getRoomCommand(1, 1))
+        assertEquals("F1W8S1", BuildingProtocol.getRoomCommand(1, 8))
+        assertEquals("F2W1S1", BuildingProtocol.getRoomCommand(2, 1))
+        assertEquals("F2W2S1", BuildingProtocol.getRoomCommand(2, 2))
+        assertEquals("F3W1S1", BuildingProtocol.getRoomCommand(3, 1))
+        assertEquals("F19W8S1", BuildingProtocol.getRoomCommand(19, 8))
+        assertEquals("F1W8S0", BuildingProtocol.getRoomOffCommand(1, 8))
     }
 
     @Test

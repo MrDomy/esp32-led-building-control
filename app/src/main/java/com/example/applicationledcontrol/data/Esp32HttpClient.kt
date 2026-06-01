@@ -20,6 +20,10 @@ object Esp32HttpClient {
         return request(host, "/command", mapOf("value" to command))
     }
 
+    suspend fun fetchStatus(host: String): String {
+        return request(host, "/status")
+    }
+
     fun normalizeHost(host: String): String {
         return host.trim()
             .removePrefix("http://")

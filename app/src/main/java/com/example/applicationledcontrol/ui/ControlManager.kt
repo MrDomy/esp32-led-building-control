@@ -2,7 +2,8 @@ package com.example.applicationledcontrol.ui
 
 import com.example.applicationledcontrol.data.Esp32HttpClient
 import com.example.applicationledcontrol.domain.BuildingProtocol
-import kotlinx.coroutines.CoroutineScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,7 +14,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-class ControlManager(private val scope: CoroutineScope) {
+class ControlManager : ViewModel() {
 
     private val _uiState = MutableStateFlow(ControlUiState())
     val uiState: StateFlow<ControlUiState> = _uiState.asStateFlow()
@@ -44,7 +45,7 @@ class ControlManager(private val scope: CoroutineScope) {
     }
 
     fun pingHost() {
-        scope.launch(Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.IO) {
             val host = _uiState.value.esp32Host
             if (host.isBlank()) {
                 _uiState.update {
@@ -56,14 +57,60 @@ class ControlManager(private val scope: CoroutineScope) {
                 return@launch
             }
 
-            runCatching { Esp32HttpClient.ping(host) }
+            runCatching { Esp32HttpClient.fetchStatus(host) }
                 .onSuccess { response ->
-                    _uiState.update {
-                        it.copy(
-                            isConnected = true,
-                            lastCommand = "PING",
-                            lastResponse = response.ifBlank { "OK" }
-                        )
+                    runCatching {
+                        val json = org.json.JSONObject(response)
+                        val mode = json.optString("mode", "Manual")
+                        val relay = json.optBoolean("relay", false)
+                        
+                        // Parse active rooms
+                        val activeArray = json.optJSONArray("active")
+                        val roomStates = mutableMapOf<Int, Set<Int>>()
+                        if (activeArray != null) {
+                            for (i in 0 until activeArray.length()) {
+                                val item = activeArray.getString(i)
+                                val match = Regex("F(\\d+)W(\\d+)").matchEntire(item)
+                                if (match != null) {
+                                    val f = match.groupValues[1].toInt()
+                                    val r = match.groupValues[2].toInt()
+                                    val current = roomStates[f] ?: emptySet()
+                                    roomStates[f] = current + r
+                                }
+                            }
+                        }
+
+                        // Parse room colors
+                        val colorsObj = json.optJSONObject("colors")
+                        val roomColors = mutableMapOf<String, Int>()
+                        if (colorsObj != null) {
+                            val keys = colorsObj.keys()
+                            while (keys.hasNext()) {
+                                val key = keys.next()
+                                val colorVal = colorsObj.getInt(key)
+                                roomColors[key] = colorVal
+                            }
+                        }
+
+                        _uiState.update {
+                            it.copy(
+                                isConnected = true,
+                                lastCommand = "STATUS",
+                                lastResponse = "Синхронизировано",
+                                currentMode = mode,
+                                isRelayActive = relay,
+                                roomStates = roomStates,
+                                roomColors = roomColors
+                            )
+                        }
+                    }.onFailure { error ->
+                        _uiState.update {
+                            it.copy(
+                                isConnected = true,
+                                lastCommand = "STATUS",
+                                lastResponse = "Ошибка JSON: ${error.message}"
+                            )
+                        }
                     }
                 }
                 .onFailure { error ->
@@ -78,7 +125,7 @@ class ControlManager(private val scope: CoroutineScope) {
     }
 
     private fun launchCommands(commands: List<String>) {
-        scope.launch(Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.IO) {
             sendMutex.withLock {
                 val state = _uiState.value
                 val host = state.esp32Host
@@ -246,11 +293,6 @@ class ControlManager(private val scope: CoroutineScope) {
             return
         }
 
-        val currentRooms = _uiState.value.roomStates[floor].orEmpty()
-        if (currentRooms.isEmpty()) {
-            return
-        }
-
         val newState = _uiState.value.roomStates - floor
         _uiState.update {
             it.copy(
@@ -260,11 +302,54 @@ class ControlManager(private val scope: CoroutineScope) {
             )
         }
 
-        val offCommands = BuildingProtocol.getFloorOffCommands(floor)
-        launchCommands(offCommands + if (newState.isEmpty()) listOf(BuildingProtocol.RELAY_OFF) else emptyList())
+        val offCommand = BuildingProtocol.getFloorOffCommand(floor)
+        launchCommands(listOf(offCommand) + if (newState.isEmpty()) listOf(BuildingProtocol.RELAY_OFF) else emptyList())
     }
 
     fun setBuildingColor(colorCommand: String) {
+        val colorIdx = colorCommand.substringAfter("SC").toIntOrNull() ?: 0
+        _uiState.update { state ->
+            val tempColors = state.roomColors.toMutableMap()
+            for (f in 1..19) {
+                for (r in 1..8) {
+                    tempColors["F${f}W$r"] = colorIdx
+                }
+            }
+            state.copy(
+                roomColors = tempColors,
+                currentMode = "Manual"
+            )
+        }
         launchCommands(listOf(colorCommand))
+    }
+
+    fun setCustomColor(floor: Int, room: Int, colorIndex: Int, colorCommand: String) {
+        _uiState.update { state ->
+            val updatedColors = if (room == 0) {
+                val tempColors = state.roomColors.toMutableMap()
+                for (r in 1..8) {
+                    tempColors["F${floor}W$r"] = colorIndex
+                }
+                tempColors
+            } else {
+                state.roomColors + ("F${floor}W$room" to colorIndex)
+            }
+
+            val updatedStates = if (room == 0) {
+                val floorRooms = (1..BuildingProtocol.roomCountForFloor(floor)).toSet()
+                state.roomStates + (floor to floorRooms)
+            } else {
+                val currentFloorRooms = state.roomStates[floor] ?: emptySet()
+                state.roomStates + (floor to (currentFloorRooms + room))
+            }
+
+            state.copy(
+                roomColors = updatedColors,
+                roomStates = updatedStates,
+                currentMode = "Manual",
+                isRelayActive = true
+            )
+        }
+        launchCommands(listOf(BuildingProtocol.RELAY_ON, colorCommand))
     }
 }

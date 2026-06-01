@@ -2,17 +2,17 @@
     <style name="Theme.ApplicationLedControl" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Force monochromatic blue for Dark Mode -->
         <item name="colorPrimary">@color/brand_primary</item>
-        <item name="colorOnPrimary">@color/on_primary_container</item>
+        <item name="colorOnPrimary">@color/brand_on_primary</item>
         <item name="colorPrimaryContainer">@color/brand_primary_container</item>
         <item name="colorOnPrimaryContainer">@color/on_primary_container</item>
         
         <item name="colorSecondary">@color/brand_primary</item>
-        <item name="colorOnSecondary">@color/on_primary_container</item>
+        <item name="colorOnSecondary">@color/brand_on_primary</item>
         <item name="colorSecondaryContainer">@color/brand_primary_container</item>
         <item name="colorOnSecondaryContainer">@color/on_primary_container</item>
 
         <item name="colorTertiary">@color/brand_primary</item>
-        <item name="colorOnTertiary">@color/on_primary_container</item>
+        <item name="colorOnTertiary">@color/brand_on_primary</item>
         <item name="colorTertiaryContainer">@color/brand_primary_container</item>
         <item name="colorOnTertiaryContainer">@color/on_primary_container</item>
         
@@ -28,13 +28,13 @@
 
     <style name="Theme.ApplicationLedControl.Dialog" parent="Theme.Material3.DayNight.Dialog">
         <item name="colorPrimary">@color/brand_primary</item>
-        <item name="colorOnPrimary">@color/on_primary_container</item>
+        <item name="colorOnPrimary">@color/brand_on_primary</item>
         <item name="colorSecondary">@color/brand_primary</item>
-        <item name="colorOnSecondary">@color/on_primary_container</item>
+        <item name="colorOnSecondary">@color/brand_on_primary</item>
         <item name="colorSecondaryContainer">@color/brand_primary_container</item>
         <item name="colorOnSecondaryContainer">@color/on_primary_container</item>
         <item name="colorTertiary">@color/brand_primary</item>
-        <item name="colorOnTertiary">@color/on_primary_container</item>
+        <item name="colorOnTertiary">@color/brand_on_primary</item>
         <item name="colorTertiaryContainer">@color/brand_primary_container</item>
         <item name="colorOnTertiaryContainer">@color/on_primary_container</item>
         <item name="android:windowBackground">@color/app_background</item>

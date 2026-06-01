@@ -12,5 +12,6 @@ data class ControlUiState(
     val lastResponse: String? = null,
     val isRelayActive: Boolean = false,
     val currentMode: String = "Manual",
-    val roomStates: Map<Int, Set<Int>> = emptyMap()
+    val roomStates: Map<Int, Set<Int>> = emptyMap(),
+    val roomColors: Map<String, Int> = emptyMap()
 )

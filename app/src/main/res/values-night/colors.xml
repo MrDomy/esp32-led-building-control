@@ -1,13 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Dark Theme Palette -->
-    <color name="brand_primary">#90CAF9</color> <!-- Lighter blue for better contrast on dark -->
-    <color name="brand_primary_container">#123E66</color>
-    <color name="on_primary_container">#E3F2FD</color>
-    <color name="outline_variant">#2E3C4C</color>
-    <color name="app_background">#121212</color> <!-- Material Dark Background -->
-    <color name="surface_panel">#1E1E1E</color> <!-- Slightly lighter surface -->
+    <!-- Minimalist Monochrome Palette (Dark Theme) -->
+    <color name="brand_primary">#FFFFFF</color>
+    <color name="brand_primary_container">#2C2C2C</color>
+    <color name="on_primary_container">#FFFFFF</color>
+    <color name="outline_variant">#333333</color>
     
-    <color name="on_surface_main">#E0E0E0</color>
-    <color name="on_surface_sub">#9E9E9E</color>
+    <!-- Background and Surface Panels -->
+    <color name="app_background">#121212</color>
+    <color name="surface_panel">#1E1E1E</color>
+    
+    <!-- Text Colors -->
+    <color name="on_surface_main">#EEEEEE</color>
+    <color name="on_surface_sub">#888888</color>
+    <color name="brand_on_primary">#121212</color>
 </resources>

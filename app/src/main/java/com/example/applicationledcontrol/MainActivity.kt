@@ -28,8 +28,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var controlManager: ControlManager
     private var tvStatus: TextView? = null
     private var roomGrid: GridLayout? = null
-    private var etHost: TextInputEditText? = null
-    private var btnOfflineMode: MaterialButton? = null
     private val roomButtons = mutableListOf<MaterialButton>()
 
     private val preferences by lazy {
@@ -41,7 +39,7 @@ class MainActivity : AppCompatActivity() {
         ThemeManager.applyTheme(this)
         try {
             setContentView(R.layout.activity_main)
-            controlManager = ControlManager(lifecycleScope)
+            controlManager = androidx.lifecycle.ViewModelProvider(this)[ControlManager::class.java]
             initViews()
             setupObservers()
         } catch (e: Exception) {
@@ -53,9 +51,6 @@ class MainActivity : AppCompatActivity() {
     private fun initViews() {
         tvStatus = findViewById(R.id.tvStatus)
         roomGrid = findViewById(R.id.roomGrid)
-        etHost = findViewById(R.id.etEsp32Host)
-        val btnConnect = findViewById<MaterialButton>(R.id.btnConnect)
-        btnOfflineMode = findViewById(R.id.btnOfflineMode)
         val btnSettings = findViewById<MaterialButton>(R.id.btnSettings)
         val floorChipGroup = findViewById<ChipGroup>(R.id.floorChipGroup)
         val btnFloorOn = findViewById<MaterialButton>(R.id.btnFloorOn)
@@ -66,7 +61,6 @@ class MainActivity : AppCompatActivity() {
 
         val savedHost = preferences.getString(PREF_KEY_HOST, DEFAULT_HOST).orEmpty()
             .ifBlank { DEFAULT_HOST }
-        etHost?.setText(savedHost)
         controlManager.updateHost(savedHost)
 
         btnSettings?.setOnClickListener { showSettingsDialog() }
@@ -81,6 +75,11 @@ class MainActivity : AppCompatActivity() {
                     setOnClickListener {
                         it.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
                         controlManager.selectFloor(i)
+                    }
+                    setOnLongClickListener { view ->
+                        view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                        showColorChooserDialog(i, room = 0)
+                        true
                     }
                 }
                 group.addView(chip)
@@ -104,28 +103,15 @@ class MainActivity : AppCompatActivity() {
                         it.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
                         controlManager.toggleRoom(controlManager.uiState.value.selectedFloor, i)
                     }
+                    setOnLongClickListener { view ->
+                        view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                        showColorChooserDialog(controlManager.uiState.value.selectedFloor, i)
+                        true
+                    }
                 }
                 roomButtons.add(btn)
                 grid.addView(btn)
             }
-        }
-
-        btnConnect?.setOnClickListener {
-            it.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-            val host = etHost?.text?.toString().orEmpty().trim()
-            if (host.isBlank()) {
-                Toast.makeText(this, R.string.host_required, Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            saveHost(host)
-            controlManager.updateHost(host)
-            controlManager.pingHost()
-        }
-
-        btnOfflineMode?.setOnClickListener {
-            it.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-            controlManager.toggleOfflineInteraction()
         }
 
         btnFloorOn?.setOnClickListener { controlManager.turnOnFloor(controlManager.uiState.value.selectedFloor) }
@@ -134,9 +120,21 @@ class MainActivity : AppCompatActivity() {
         btnAuto?.setOnClickListener { controlManager.setAutoMode() }
         btnOff?.setOnClickListener { controlManager.turnOffAll() }
 
+        findViewById<View>(R.id.btnMainColorDefault)?.setOnClickListener {
+            controlManager.setBuildingColor(BuildingProtocol.COLOR_WHITE)
+        }
+        findViewById<View>(R.id.btnMainColorGreen)?.setOnClickListener {
+            controlManager.setBuildingColor(BuildingProtocol.COLOR_GREEN)
+        }
+        findViewById<View>(R.id.btnMainColorYellow)?.setOnClickListener {
+            controlManager.setBuildingColor(BuildingProtocol.COLOR_YELLOW)
+        }
+        findViewById<View>(R.id.btnMainColorRed)?.setOnClickListener {
+            controlManager.setBuildingColor(BuildingProtocol.COLOR_RED)
+        }
+
         updateControlsState(false, false)
         updateRoomButtons(controlManager.uiState.value)
-        updateOfflineModeButton(controlManager.uiState.value.allowOfflineInteraction)
     }
 
     private fun updateControlsState(isConnected: Boolean, canInteractOffline: Boolean) {
@@ -146,7 +144,10 @@ class MainActivity : AppCompatActivity() {
         val btnAllOn = findViewById<MaterialButton>(R.id.btnAllOn)
         val btnAuto = findViewById<MaterialButton>(R.id.btnAuto)
         val btnOff = findViewById<MaterialButton>(R.id.btnOff)
-        val btnConnect = findViewById<MaterialButton>(R.id.btnConnect)
+        val btnColorDefault = findViewById<View>(R.id.btnMainColorDefault)
+        val btnColorGreen = findViewById<View>(R.id.btnMainColorGreen)
+        val btnColorYellow = findViewById<View>(R.id.btnMainColorYellow)
+        val btnColorRed = findViewById<View>(R.id.btnMainColorRed)
 
         val canInteract = isConnected || canInteractOffline
         val alpha = if (canInteract) 1.0f else 0.5f
@@ -158,9 +159,15 @@ class MainActivity : AppCompatActivity() {
         btnAllOn?.isEnabled = canInteract
         btnAuto?.isEnabled = canInteract
         btnOff?.isEnabled = canInteract
-        btnConnect?.isEnabled = true
-        etHost?.isEnabled = true
-        btnOfflineMode?.isEnabled = true
+
+        btnColorDefault?.isEnabled = canInteract
+        btnColorDefault?.alpha = alpha
+        btnColorGreen?.isEnabled = canInteract
+        btnColorGreen?.alpha = alpha
+        btnColorYellow?.isEnabled = canInteract
+        btnColorYellow?.alpha = alpha
+        btnColorRed?.isEnabled = canInteract
+        btnColorRed?.alpha = alpha
     }
 
     private fun showSettingsDialog() {
@@ -171,6 +178,20 @@ class MainActivity : AppCompatActivity() {
 
         val btnClose = dialogView.findViewById<MaterialButton>(R.id.btnClose)
         val switchDarkMode = dialogView.findViewById<SwitchMaterial>(R.id.switchDarkMode)
+        val dialogEtHost = dialogView.findViewById<TextInputEditText>(R.id.etEsp32Host)
+        val dialogBtnConnect = dialogView.findViewById<MaterialButton>(R.id.btnConnect)
+        val dialogBtnOfflineMode = dialogView.findViewById<MaterialButton>(R.id.btnOfflineMode)
+
+        // Populate values
+        val currentHost = controlManager.uiState.value.esp32Host
+        dialogEtHost?.setText(currentHost)
+
+        fun updateDialogOfflineButtonText(offlineEnabled: Boolean) {
+            dialogBtnOfflineMode?.text = getString(
+                if (offlineEnabled) R.string.offline_mode_on else R.string.offline_mode_off
+            )
+        }
+        updateDialogOfflineButtonText(controlManager.uiState.value.allowOfflineInteraction)
 
         switchDarkMode?.isChecked = ThemeManager.isDarkMode(this)
         switchDarkMode?.setOnCheckedChangeListener { _, isChecked ->
@@ -180,17 +201,36 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        dialogView.findViewById<View>(R.id.btnColorDefault)?.setOnClickListener {
-            controlManager.setBuildingColor(BuildingProtocol.COLOR_WHITE)
+        dialogBtnConnect?.setOnClickListener {
+            it.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+            val host = dialogEtHost?.text?.toString().orEmpty().trim()
+            if (host.isBlank()) {
+                Toast.makeText(this, R.string.host_required, Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            saveHost(host)
+            controlManager.updateHost(host)
+            controlManager.pingHost()
         }
-        dialogView.findViewById<View>(R.id.btnColorGreen)?.setOnClickListener {
-            controlManager.setBuildingColor(BuildingProtocol.COLOR_GREEN)
+
+        dialogBtnOfflineMode?.setOnClickListener {
+            it.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+            controlManager.toggleOfflineInteraction()
         }
-        dialogView.findViewById<View>(R.id.btnColorYellow)?.setOnClickListener {
-            controlManager.setBuildingColor(BuildingProtocol.COLOR_YELLOW)
+
+        val job = lifecycleScope.launch {
+            controlManager.uiState.collect { state ->
+                updateDialogOfflineButtonText(state.allowOfflineInteraction)
+            }
         }
-        dialogView.findViewById<View>(R.id.btnColorRed)?.setOnClickListener {
-            controlManager.setBuildingColor(BuildingProtocol.COLOR_RED)
+
+        dialog.setOnDismissListener {
+            job.cancel()
+            val host = dialogEtHost?.text?.toString().orEmpty().trim()
+            if (host.isNotBlank()) {
+                saveHost(host)
+                controlManager.updateHost(host)
+            }
         }
 
         btnClose?.setOnClickListener { dialog.dismiss() }
@@ -204,7 +244,6 @@ class MainActivity : AppCompatActivity() {
                     updateUI(state)
                     updateRoomButtons(state)
                     updateControlsState(state.isConnected, state.allowOfflineInteraction)
-                    updateOfflineModeButton(state.allowOfflineInteraction)
                 }
             }
         }
@@ -238,33 +277,58 @@ class MainActivity : AppCompatActivity() {
             if (!isValidRoom) {
                 button.backgroundTintList = androidx.core.content.ContextCompat.getColorStateList(
                     this,
-                    android.R.color.darker_gray
+                    R.color.surface_panel
                 )
-                button.setTextColor(Color.WHITE)
+                button.setTextColor(androidx.core.content.ContextCompat.getColor(this, R.color.on_surface_sub))
             } else if (activeRooms.contains(roomNumber)) {
-                button.backgroundTintList = androidx.core.content.ContextCompat.getColorStateList(
-                    this,
-                    R.color.brand_primary
-                )
-                button.setTextColor(Color.WHITE)
+                val colorIdx = state.roomColors["F${state.selectedFloor}W$roomNumber"] ?: 0
+                val (bgRes, textRes) = when (colorIdx) {
+                    1 -> Pair(R.color.preset_green, R.color.white)
+                    2 -> Pair(R.color.preset_yellow, R.color.black)
+                    3 -> Pair(R.color.preset_red, R.color.white)
+                    else -> Pair(R.color.brand_primary, R.color.brand_on_primary)
+                }
+                button.backgroundTintList = androidx.core.content.ContextCompat.getColorStateList(this, bgRes)
+                button.setTextColor(androidx.core.content.ContextCompat.getColor(this, textRes))
             } else {
                 button.backgroundTintList = androidx.core.content.ContextCompat.getColorStateList(
                     this,
-                    android.R.color.darker_gray
+                    R.color.surface_panel
                 )
-                button.setTextColor(Color.WHITE)
+                button.setTextColor(androidx.core.content.ContextCompat.getColor(this, R.color.on_surface_main))
             }
         }
     }
 
-    private fun updateOfflineModeButton(enabled: Boolean) {
-        btnOfflineMode?.text = getString(
-            if (enabled) R.string.offline_mode_on else R.string.offline_mode_off
+    private fun showColorChooserDialog(floor: Int, room: Int) {
+        val colors = arrayOf(
+            getString(R.string.color_default), // Тёплый белый
+            getString(R.string.color_green),   // Зелёный
+            getString(R.string.color_yellow),  // Жёлтый
+            getString(R.string.color_red)      // Красный
         )
+
+        val title = if (room == 0) {
+            "Цвет для всего этажа $floor"
+        } else {
+            "Цвет для комнаты $room (этаж $floor)"
+        }
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle(title)
+            .setItems(colors) { dialog, which ->
+                val colorCommand = if (room == 0) {
+                    "F${floor}W0SC$which"
+                } else {
+                    "F${floor}W${room}SC$which"
+                }
+                controlManager.setCustomColor(floor, room, which, colorCommand)
+                dialog.dismiss()
+            }
+            .show()
     }
 
     override fun onStop() {
-        saveHost(etHost?.text?.toString().orEmpty().trim())
         super.onStop()
     }
 

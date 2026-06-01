@@ -26,9 +26,10 @@
     <string name="actions_title">ВСЁ ЗДАНИЕ</string>
     <string name="action_all_on">ВКЛЮЧИТЬ ВЕСЬ ДОМ</string>
     <string name="action_all_off">ВЫКЛЮЧИТЬ ВЕСЬ ДОМ</string>
-    <string name="action_auto">АВТОМАТИЧЕСКИЙ РЕЖИМ</string>
+    <string name="action_auto">СВЕТОВОЕ ШОУ</string>
 
     <!-- Settings Dialog -->
+    <string name="connection_section_title">ПАРАМЕТРЫ СВЯЗИ</string>
     <string name="settings_title">Параметры и темы</string>
     <string name="theme_section_title">ОФОРМЛЕНИЕ</string>
     <string name="dark_theme">Тёмная тема</string>
@@ -41,14 +42,4 @@
     <string name="color_red">Красный</string>
     <string name="color_default">Тёплый белый</string>
     <string name="close">Закрыть</string>
-
-    <!-- Legacy/Misc -->
-    <string name="device_list_title">Доступные устройства</string>
-    <string name="device_list_subtitle">Список обновляется автоматически. Нажмите на устройство для подключения.</string>
-    <string name="paired_devices_hint">Идёт поиск доступных Bluetooth-устройств.</string>
-    <string name="scanning_devices">Идёт поиск устройств...</string>
-    <string name="bluetooth_disabled">Bluetooth выключен</string>
-    <string name="permission_needed_for_devices">Нужны разрешения на поиск устройств</string>
-    <string name="refresh_devices">Обновить</string>
-    <string name="unknown_device_name">Без названия</string>
 </resources>

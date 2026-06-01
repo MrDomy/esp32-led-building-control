@@ -13,3 +13,16 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Arduino/ESP32 compilation and build files
+**/build/
+**/out/
+.arduino/
+*.elf
+*.bin
+*.hex
+
+# Local documentation / explanations (exclude from repository)
+KOTLIN_BLUETOOTH_GUIDE_RU.md
+KOTLIN_HTTP_GUIDE_RU.md
+PROJECT_DETAILED_BREAKDOWN_RU.md

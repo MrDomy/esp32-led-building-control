@@ -12,13 +12,21 @@ object ThemeManager {
 
     fun applyTheme(context: Context) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val isDark = prefs.getBoolean(KEY_IS_DARK, false)
-        applyMode(isDark)
+        if (!prefs.contains(KEY_IS_DARK)) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+        } else {
+            val isDark = prefs.getBoolean(KEY_IS_DARK, false)
+            applyMode(isDark)
+        }
     }
 
     fun isDarkMode(context: Context): Boolean {
-        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .getBoolean(KEY_IS_DARK, false)
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        if (!prefs.contains(KEY_IS_DARK)) {
+            val currentNightMode = context.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK
+            return currentNightMode == android.content.res.Configuration.UI_MODE_NIGHT_YES
+        }
+        return prefs.getBoolean(KEY_IS_DARK, false)
     }
 
     fun setDarkMode(context: Context, isDark: Boolean) {

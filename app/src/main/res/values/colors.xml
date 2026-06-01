@@ -1,23 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Professional Monochrome Blue Palette -->
-    <color name="brand_primary">#1976D2</color>
-    <color name="brand_primary_container">#D6E8FF</color>
-    <color name="on_primary_container">#0D47A1</color>
-    <color name="outline_variant">#D0D7E2</color>
+    <!-- Minimalist Monochrome Palette (Light Theme) -->
+    <color name="brand_primary">#000000</color>
+    <color name="brand_primary_container">#EEEEEE</color>
+    <color name="on_primary_container">#000000</color>
+    <color name="outline_variant">#E0E0E0</color>
     
-    <!-- Uniform Background Colors -->
-    <color name="app_background">#F8F9FA</color>
-    <color name="surface_panel">#FFFFFF</color>
+    <!-- Background and Surface Panels -->
+    <color name="app_background">#FFFFFF</color>
+    <color name="surface_panel">#F5F5F5</color>
     
     <!-- Text Colors -->
-    <color name="on_surface_main">#212121</color>
-    <color name="on_surface_sub">#616161</color>
+    <color name="on_surface_main">#111111</color>
+    <color name="on_surface_sub">#777777</color>
 
     <color name="white">#FFFFFFFF</color>
     <color name="black">#FF000000</color>
+    <color name="brand_on_primary">#FFFFFF</color>
 
-    <!-- Preset Colors for the squares (LED control) -->
+    <!-- Elegant Preset Colors for the UI -->
     <color name="preset_white">#FFFFFF</color>
     <color name="preset_green">#4CAF50</color>
     <color name="preset_yellow">#FFEB3B</color>

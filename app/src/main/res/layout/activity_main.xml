@@ -32,44 +32,6 @@
             android:text="@string/status_device_not_connected"
             android:textColor="?attr/colorOnSurfaceVariant"
             android:textSize="14sp" />
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:hint="@string/esp32_host_label"
-            app:boxBackgroundMode="outline"
-            app:boxStrokeColor="?attr/colorPrimary">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etEsp32Host"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="textUri"
-                android:singleLine="true"
-                android:textColor="?attr/colorOnSurface"
-                android:textColorHint="?attr/colorOnSurfaceVariant" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnConnect"
-            style="@style/Widget.Material3.Button.TonalButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="@string/connect_esp32"
-            app:backgroundTint="?attr/colorPrimary"
-            app:icon="@android:drawable/ic_menu_search" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnOfflineMode"
-            style="@style/Widget.Material3.Button.OutlinedButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:text="@string/offline_mode_off"
-            app:strokeColor="?attr/colorPrimary"
-            android:textColor="?attr/colorPrimary" />
     </LinearLayout>
 
     <ScrollView
@@ -135,15 +97,17 @@
                         android:layout_marginTop="16dp"
                         android:text="@string/action_floor_on"
                         app:backgroundTint="?attr/colorPrimary"
+                        android:textColor="?attr/colorOnPrimary"
                         app:cornerRadius="12dp" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnFloorOff"
-                        style="@style/Widget.Material3.Button.OutlinedButton"
                         android:layout_width="match_parent"
                         android:layout_height="56dp"
                         android:layout_marginTop="8dp"
                         android:text="@string/action_floor_off"
+                        app:backgroundTint="?attr/colorPrimary"
+                        android:textColor="?attr/colorOnPrimary"
                         app:cornerRadius="12dp" />
 
                     <android.widget.GridLayout
@@ -188,27 +152,108 @@
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnAllOn"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
+                        android:layout_height="56dp"
                         android:text="@string/action_all_on"
+                        app:backgroundTint="?attr/colorPrimary"
+                        android:textColor="?attr/colorOnPrimary"
                         app:cornerRadius="12dp" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnAuto"
-                        style="@style/Widget.Material3.Button.OutlinedButton"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
+                        android:layout_height="56dp"
                         android:layout_marginTop="8dp"
                         android:text="@string/action_auto"
+                        app:backgroundTint="?attr/colorPrimary"
+                        android:textColor="?attr/colorOnPrimary"
                         app:cornerRadius="12dp" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnOff"
-                        style="@style/Widget.Material3.Button.TextButton"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
+                        android:layout_height="56dp"
                         android:layout_marginTop="8dp"
                         android:text="@string/action_all_off"
-                        android:textColor="?attr/colorOnSurfaceVariant" />
+                        app:backgroundTint="?attr/colorPrimary"
+                        android:textColor="?attr/colorOnPrimary"
+                        app:cornerRadius="12dp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Color Preset Section -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="8dp"
+                android:text="@string/color_presets_title"
+                android:textColor="?attr/colorPrimary"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.1" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardBackgroundColor="?attr/colorSurfaceVariant"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:strokeColor="?attr/colorOutline"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:padding="16dp">
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/btnMainColorDefault"
+                        android:layout_width="56dp"
+                        android:layout_height="56dp"
+                        android:layout_margin="8dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        app:cardBackgroundColor="@color/preset_white"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="0dp"
+                        app:strokeColor="?attr/colorOutline"
+                        app:strokeWidth="1dp" />
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/btnMainColorGreen"
+                        android:layout_width="56dp"
+                        android:layout_height="56dp"
+                        android:layout_margin="8dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        app:cardBackgroundColor="@color/preset_green"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="0dp" />
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/btnMainColorYellow"
+                        android:layout_width="56dp"
+                        android:layout_height="56dp"
+                        android:layout_margin="8dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        app:cardBackgroundColor="@color/preset_yellow"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="0dp" />
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/btnMainColorRed"
+                        android:layout_width="56dp"
+                        android:layout_height="56dp"
+                        android:layout_margin="8dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        app:cardBackgroundColor="@color/preset_red"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="0dp" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

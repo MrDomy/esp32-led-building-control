@@ -19,8 +19,21 @@ WebServer server(80);
 bool autoMode = false;
 bool relayActive = false;
 uint32_t currentColor = 0;
-unsigned long nextAutoTick = 0;
+unsigned long lastAutoTick = 0;
 uint16_t autoStep = 0;
+
+// State tracking for each window in the multi-story mockup
+bool roomStates[20][9]; // 1..19 floors, 1..8 windows
+uint8_t roomColors[20][9]; // 0 = white, 1 = green, 2 = yellow, 3 = red
+
+uint32_t getRoomColor(int floor, int room) {
+  uint8_t cIdx = roomColors[floor][room];
+  if (cIdx == 1) return strip.Color(0, 100, 0); // green
+  if (cIdx == 2) return strip.Color(100, 100, 0); // yellow
+  if (cIdx == 3) return strip.Color(100, 0, 0); // red
+  return strip.Color(255, 200, 50); // warm white (default)
+}
+
 
 struct Range {
   int start;
@@ -46,7 +59,7 @@ static constexpr Range FLOOR_RANGES[19] = {
   {811, 865},
   {865, 919},
   {919, 973},
-  {973, 1060}
+  {973, 1061}
 };
 
 static constexpr Range FLOOR1_ROOMS[8] = {
@@ -82,11 +95,21 @@ void setRange(int start, int endExclusive, uint32_t color) {
 void clearAll() {
   strip.clear();
   strip.show();
+  for (int f = 1; f <= 19; f++) {
+    for (int r = 1; r <= 8; r++) {
+      roomStates[f][r] = false;
+    }
+  }
 }
 
 void showAll(uint32_t color) {
   setRange(0, LED_COUNT, color);
   strip.show();
+  for (int f = 1; f <= 19; f++) {
+    for (int r = 1; r <= 8; r++) {
+      roomStates[f][r] = true;
+    }
+  }
 }
 
 void setRelay(bool on) {
@@ -97,32 +120,11 @@ void setRelay(bool on) {
 void setModeAuto(bool enabled) {
   autoMode = enabled;
   autoStep = 0;
-  nextAutoTick = millis();
+  lastAutoTick = millis() - 100;
 }
 
 void setColorPreset(uint32_t color) {
   currentColor = color;
-}
-
-bool decodeRoomCommand(int command, int &floor, int &room) {
-  if (command >= 111 && command <= 118) {
-    floor = 1;
-    room = command - 110;
-    return true;
-  }
-
-  if (command < 81) {
-    return false;
-  }
-
-  floor = command / 80 + 1;
-  if (floor < 2 || floor > 19) {
-    return false;
-  }
-
-  const int remainder = command % 80;
-  room = remainder == 0 ? 1 : (remainder / 10 + 1);
-  return room >= 1 && room <= 8;
 }
 
 void applyFloorOn(int floor) {
@@ -130,10 +132,61 @@ void applyFloorOn(int floor) {
     return;
   }
 
-  const Range range = FLOOR_RANGES[floor - 1];
   setRelay(true);
-  setRange(range.start, range.endExclusive, currentColor);
+  
+  // Fill the entire floor background first using the first room's color
+  const Range range = FLOOR_RANGES[floor - 1];
+  uint32_t floorColor = getRoomColor(floor, 1);
+  setRange(range.start, range.endExclusive, floorColor);
+
+  // Draw each room with its specific color
+  for (int r = 1; r <= 8; r++) {
+    roomStates[floor][r] = true;
+    uint32_t color = getRoomColor(floor, r);
+    if (floor == 1) {
+      const Range rRange = FLOOR1_ROOMS[r - 1];
+      setRange(rRange.start, rRange.endExclusive, color);
+    } else {
+      const int base = (floor - 2) * 54;
+      const Range rRange = FLOOR_2_TO_19_ROOMS[r - 1];
+      setRange(rRange.start + base, rRange.endExclusive + base, color);
+    }
+  }
+
+  // Handle floor 19 extra ranges
+  if (floor == 19) {
+    for (int r = 1; r <= 8; r++) {
+      uint32_t color = getRoomColor(19, r);
+      switch (r) {
+        case 1: setRange(1038, 1041, color); break;
+        case 2: setRange(1035, 1037, color); break;
+        case 4: setRange(1029, 1031, color); break;
+        case 5:
+          setRange(1027, 1028, color);
+          setRange(1058, 1061, color);
+          break;
+        case 7: setRange(1053, 1056, color); break;
+        case 8: setRange(1049, 1053, color); break;
+        default: break;
+      }
+    }
+  }
+
   strip.show();
+}
+
+void applyFloorOff(int floor) {
+  if (floor < 1 || floor > 19) {
+    return;
+  }
+
+  const Range range = FLOOR_RANGES[floor - 1];
+  setRange(range.start, range.endExclusive, strip.Color(0, 0, 0));
+  strip.show();
+
+  for (int r = 1; r <= 8; r++) {
+    roomStates[floor][r] = false;
+  }
 }
 
 void applyRoomOn(int floor, int room) {
@@ -142,29 +195,32 @@ void applyRoomOn(int floor, int room) {
   }
 
   setRelay(true);
+  roomStates[floor][room] = true;
+
+  uint32_t color = getRoomColor(floor, room);
 
   if (floor == 1) {
     const Range range = FLOOR1_ROOMS[room - 1];
-    setRange(range.start, range.endExclusive, currentColor);
+    setRange(range.start, range.endExclusive, color);
     strip.show();
     return;
   }
 
   const int base = (floor - 2) * 54;
   const Range range = FLOOR_2_TO_19_ROOMS[room - 1];
-  setRange(range.start + base, range.endExclusive + base, currentColor);
+  setRange(range.start + base, range.endExclusive + base, color);
 
   if (floor == 19) {
     switch (room) {
-      case 1: setRange(1038, 1041, currentColor); break;
-      case 2: setRange(1035, 1037, currentColor); break;
-      case 4: setRange(1029, 1031, currentColor); break;
+      case 1: setRange(1038, 1041, color); break;
+      case 2: setRange(1035, 1037, color); break;
+      case 4: setRange(1029, 1031, color); break;
       case 5:
-        setRange(1027, 1028, currentColor);
-        setRange(1058, 1060, currentColor);
+        setRange(1027, 1028, color);
+        setRange(1058, 1061, color);
         break;
-      case 7: setRange(1053, 1056, currentColor); break;
-      case 8: setRange(1049, 1053, currentColor); break;
+      case 7: setRange(1053, 1056, color); break;
+      case 8: setRange(1049, 1053, color); break;
       default: break;
     }
   }
@@ -176,6 +232,8 @@ void applyRoomOff(int floor, int room) {
   if (floor < 1 || floor > 19 || room < 1 || room > 8) {
     return;
   }
+
+  roomStates[floor][room] = false;
 
   if (floor == 1) {
     const Range range = FLOOR1_ROOMS[room - 1];
@@ -195,7 +253,7 @@ void applyRoomOff(int floor, int room) {
       case 4: setRange(1029, 1031, strip.Color(0, 0, 0)); break;
       case 5:
         setRange(1027, 1028, strip.Color(0, 0, 0));
-        setRange(1058, 1060, strip.Color(0, 0, 0));
+        setRange(1058, 1061, strip.Color(0, 0, 0));
         break;
       case 7: setRange(1053, 1056, strip.Color(0, 0, 0)); break;
       case 8: setRange(1049, 1053, strip.Color(0, 0, 0)); break;
@@ -207,75 +265,77 @@ void applyRoomOff(int floor, int room) {
 }
 
 void applyCommand(const String &value) {
-  if (value == "50") {
-    setRelay(true);
-    return;
-  }
+  if (value.startsWith("F") && value.indexOf("W") > 0 && value.indexOf("S") > 0) {
+    int wPos = value.indexOf("W");
+    int sPos = value.indexOf("S");
+    int floor = value.substring(1, wPos).toInt();
+    int window = value.substring(wPos + 1, sPos).toInt();
+    String state = value.substring(sPos + 1);
 
-  if (value == "52") {
-    setRelay(false);
-    clearAll();
-    return;
-  }
+    if (state == "1") {
+      if (floor == 0 && window == 0) {
+        setRelay(true);
+        for (int f = 1; f <= 19; f++) {
+          applyFloorOn(f);
+        }
+      } else if (window == 0) {
+        applyFloorOn(floor);
+      } else {
+        applyRoomOn(floor, window);
+      }
+    } else if (state == "0") {
+      if (floor == 0 && window == 0) {
+        setRelay(false);
+        clearAll();
+      } else if (window == 0) {
+        applyFloorOff(floor);
+      } else {
+        applyRoomOff(floor, window);
+      }
+    } else if (state == "2") {
+      setModeAuto(true);
+      setRelay(true);
+    } else if (state.startsWith("C")) {
+      int colorIdx = state.substring(1).toInt();
+      uint32_t targetColor = strip.Color(255, 200, 50);
+      if (colorIdx == 0) targetColor = strip.Color(255, 200, 50);
+      else if (colorIdx == 1) targetColor = strip.Color(0, 100, 0);
+      else if (colorIdx == 2) targetColor = strip.Color(100, 100, 0);
+      else if (colorIdx == 3) targetColor = strip.Color(100, 0, 0);
 
-  if (value == "80") {
-    setModeAuto(true);
-    setRelay(true);
-    return;
-  }
-
-  if (value == "60") {
-    setModeAuto(false);
-    return;
-  }
-
-  if (value == "11111") {
-    setRelay(true);
-    showAll(currentColor);
-    return;
-  }
-
-  if (value == "50000") {
-    setColorPreset(strip.Color(255, 200, 50));
-    return;
-  }
-
-  if (value == "50100") {
-    setColorPreset(strip.Color(0, 100, 0));
-    return;
-  }
-
-  if (value == "50200") {
-    setColorPreset(strip.Color(100, 100, 0));
-    return;
-  }
-
-  if (value == "50300") {
-    setColorPreset(strip.Color(100, 0, 0));
-    return;
-  }
-
-  const int numeric = value.toInt();
-
-  if (numeric >= 10001 && numeric <= 10019) {
-    applyFloorOn(numeric - 10000);
-    return;
-  }
-
-  if (numeric >= 200) {
-    const int baseCommand = numeric - 100;
-    int floor = 0;
-    int room = 0;
-    if (decodeRoomCommand(baseCommand, floor, room)) {
-      applyRoomOff(floor, room);
+      if (floor == 0 && window == 0) {
+        // Change color for the entire building
+        setColorPreset(targetColor);
+        for (int f = 1; f <= 19; f++) {
+          for (int r = 1; r <= 8; r++) {
+            roomColors[f][r] = colorIdx;
+          }
+          bool floorActive = false;
+          for (int r = 1; r <= 8; r++) {
+            if (roomStates[f][r]) floorActive = true;
+          }
+          if (floorActive) {
+            applyFloorOn(f);
+          }
+        }
+      } else if (window == 0) {
+        // Change color for a specific floor
+        for (int r = 1; r <= 8; r++) {
+          roomColors[floor][r] = colorIdx;
+        }
+        bool floorActive = false;
+        for (int r = 1; r <= 8; r++) {
+          if (roomStates[floor][r]) floorActive = true;
+        }
+        if (floorActive) {
+          applyFloorOn(floor);
+        }
+      } else {
+        // Change color for a specific room
+        roomColors[floor][window] = colorIdx;
+        applyRoomOn(floor, window);
+      }
     }
-    return;
-  }
-
-  int floor = 0;
-  int room = 0;
-  if (decodeRoomCommand(numeric, floor, room)) {
-    applyRoomOn(floor, room);
   }
 }
 
@@ -285,11 +345,11 @@ void runAutoAnimation() {
   }
 
   const unsigned long now = millis();
-  if (now < nextAutoTick) {
+  if (now - lastAutoTick < 100) {
     return;
   }
 
-  nextAutoTick = now + 100;
+  lastAutoTick = now;
   autoStep++;
 
   if (autoStep < 500) {
@@ -331,7 +391,30 @@ void handleStatus() {
   json += "\"relay\":";
   json += relayActive ? "true" : "false";
   json += ",";
-  json += "\"color\":\"warm\"";
+  json += "\"active\":[";
+  bool first = true;
+  for (int f = 1; f <= 19; f++) {
+    for (int r = 1; r <= 8; r++) {
+      if (roomStates[f][r]) {
+        if (!first) json += ",";
+        json += "\"F" + String(f) + "W" + String(r) + "\"";
+        first = false;
+      }
+    }
+  }
+  json += "],";
+  json += "\"colors\":{";
+  first = true;
+  for (int f = 1; f <= 19; f++) {
+    for (int r = 1; r <= 8; r++) {
+      if (roomColors[f][r] != 0) {
+        if (!first) json += ",";
+        json += "\"F" + String(f) + "W" + String(r) + "\":" + String(roomColors[f][r]);
+        first = false;
+      }
+    }
+  }
+  json += "}";
   json += "}";
   server.send(200, "application/json", json);
 }
@@ -364,6 +447,14 @@ void setup() {
 
   randomSeed(micros());
 
+  // Initialize all roomStates to false and roomColors to 0
+  for (int f = 0; f < 20; f++) {
+    for (int r = 0; r < 9; r++) {
+      roomStates[f][r] = false;
+      roomColors[f][r] = 0;
+    }
+  }
+
   setupWifi();
   setupRoutes();
   server.begin();
@@ -373,14 +464,16 @@ void loop() {
   server.handleClient();
   runAutoAnimation();
 
-  if (digitalRead(BUTTON_AUTO_PIN) == LOW) {
-    setModeAuto(true);
-    setRelay(true);
-    delay(200);
-  }
-
-  if (digitalRead(BUTTON_MANUAL_PIN) == LOW) {
-    setModeAuto(false);
-    delay(200);
+  static unsigned long lastButtonPress = 0;
+  const unsigned long now = millis();
+  if (now - lastButtonPress >= 200) {
+    if (digitalRead(BUTTON_AUTO_PIN) == LOW) {
+      setModeAuto(true);
+      setRelay(true);
+      lastButtonPress = now;
+    } else if (digitalRead(BUTTON_MANUAL_PIN) == LOW) {
+      setModeAuto(false);
+      lastButtonPress = now;
+    }
   }
 }
