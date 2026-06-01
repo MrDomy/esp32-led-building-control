@@ -1,5 +1,7 @@
 # 🏢 ESP32 LED Building Control
 
+[![Android CI](https://github.com/MrDomy/esp32-led-building-control/actions/workflows/android.yml/badge.svg)](https://github.com/MrDomy/esp32-led-building-control/actions)
+
 Система управления светодиодной адресной лентой на физическом макете здания с помощью Android-приложения через HTTP-протокол.
 
 ## 📋 Возможности
