@@ -23,6 +23,7 @@ class ControlManager : ViewModel() {
 
     fun updateHost(host: String) {
         val normalizedHost = Esp32HttpClient.normalizeHost(host)
+        if (_uiState.value.esp32Host == normalizedHost) return
         _uiState.update {
             it.copy(
                 esp32Host = normalizedHost,

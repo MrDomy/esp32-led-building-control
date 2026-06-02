@@ -2,8 +2,16 @@
 #include <WiFi.h>
 #include <WebServer.h>
 
-// Adjust these pins to your wiring if needed.
+// Раскомментируйте строчку ниже для режима тестирования с 10 светодиодами.
+// Закомментируйте её (поставьте // перед #define), когда подключите весь макет на 1061 светодиод.
+#define TEST_10_LEDS
+
+#ifdef TEST_10_LEDS
+static constexpr int LED_COUNT = 10;
+#else
 static constexpr int LED_COUNT = 1061;
+#endif
+
 static constexpr int LED_PIN = 18;
 static constexpr int RELAY_PIN = 23;
 static constexpr int FLAG_PIN = 34;
@@ -34,7 +42,7 @@ uint32_t getRoomColor(int floor, int room) {
   return strip.Color(255, 200, 50); // warm white (default)
 }
 
-
+#ifndef TEST_10_LEDS
 struct Range {
   int start;
   int endExclusive;
@@ -83,6 +91,7 @@ static constexpr Range FLOOR_2_TO_19_ROOMS[8] = {
   {96, 102},
   {89, 96}
 };
+#endif
 
 void setRange(int start, int endExclusive, uint32_t color) {
   start = max(0, start);
@@ -134,6 +143,14 @@ void applyFloorOn(int floor) {
 
   setRelay(true);
   
+#ifdef TEST_10_LEDS
+  // Для теста 10 светодиодов: включаем светодиоды 0..7 для комнат 1..8
+  for (int r = 1; r <= 8; r++) {
+    roomStates[floor][r] = true;
+    uint32_t color = getRoomColor(floor, r);
+    strip.setPixelColor(r - 1, color);
+  }
+#else
   // Fill the entire floor background first using the first room's color
   const Range range = FLOOR_RANGES[floor - 1];
   uint32_t floorColor = getRoomColor(floor, 1);
@@ -171,6 +188,7 @@ void applyFloorOn(int floor) {
       }
     }
   }
+#endif
 
   strip.show();
 }
@@ -180,13 +198,20 @@ void applyFloorOff(int floor) {
     return;
   }
 
+#ifdef TEST_10_LEDS
+  // Для теста 10 светодиодов: гасим светодиоды 0..7
+  for (int r = 1; r <= 8; r++) {
+    strip.setPixelColor(r - 1, strip.Color(0, 0, 0));
+    roomStates[floor][r] = false;
+  }
+#else
   const Range range = FLOOR_RANGES[floor - 1];
   setRange(range.start, range.endExclusive, strip.Color(0, 0, 0));
-  strip.show();
-
   for (int r = 1; r <= 8; r++) {
     roomStates[floor][r] = false;
   }
+#endif
+  strip.show();
 }
 
 void applyRoomOn(int floor, int room) {
@@ -199,6 +224,10 @@ void applyRoomOn(int floor, int room) {
 
   uint32_t color = getRoomColor(floor, room);
 
+#ifdef TEST_10_LEDS
+  // Для теста 10 светодиодов: маппим комнаты 1..8 на светодиоды 0..7
+  strip.setPixelColor(room - 1, color);
+#else
   if (floor == 1) {
     const Range range = FLOOR1_ROOMS[room - 1];
     setRange(range.start, range.endExclusive, color);
@@ -224,6 +253,7 @@ void applyRoomOn(int floor, int room) {
       default: break;
     }
   }
+#endif
 
   strip.show();
 }
@@ -235,6 +265,10 @@ void applyRoomOff(int floor, int room) {
 
   roomStates[floor][room] = false;
 
+#ifdef TEST_10_LEDS
+  // Для теста 10 светодиодов: гасим светодиод этой комнаты
+  strip.setPixelColor(room - 1, strip.Color(0, 0, 0));
+#else
   if (floor == 1) {
     const Range range = FLOOR1_ROOMS[room - 1];
     setRange(range.start, range.endExclusive, strip.Color(0, 0, 0));
@@ -260,6 +294,7 @@ void applyRoomOff(int floor, int room) {
       default: break;
     }
   }
+#endif
 
   strip.show();
 }
