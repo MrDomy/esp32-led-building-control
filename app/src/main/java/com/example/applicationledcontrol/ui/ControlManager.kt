@@ -131,9 +131,9 @@ class ControlManager : ViewModel() {
                 val state = _uiState.value
                 val host = state.esp32Host
 
-                if (!state.allowOfflineInteraction && !state.isConnected) {
+                if (host.isBlank()) {
                     _uiState.update {
-                        it.copy(lastResponse = "ESP32 не подключен")
+                        it.copy(lastResponse = "Не задан IP-адрес")
                     }
                     return@withLock
                 }
@@ -211,12 +211,21 @@ class ControlManager : ViewModel() {
         _uiState.update {
             it.copy(
                 currentMode = "Auto",
-                roomStates = emptyMap(),
                 isRelayActive = true
             )
         }
 
         launchCommands(listOf(BuildingProtocol.MODE_AUTO))
+    }
+
+    fun setManualMode() {
+        _uiState.update {
+            it.copy(
+                currentMode = "Manual"
+            )
+        }
+        // F0W0S3 - команда возврата к дому
+        launchCommands(listOf("F0W0S3"))
     }
 
     fun toggleRoom(floor: Int, room: Int) {

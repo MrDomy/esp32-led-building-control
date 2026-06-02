@@ -128,8 +128,23 @@ void setRelay(bool on) {
 
 void setModeAuto(bool enabled) {
   autoMode = enabled;
-  autoStep = 0;
-  lastAutoTick = millis() - 100;
+  if (enabled) {
+    autoStep = 0;
+    lastAutoTick = millis() - 100;
+    strip.clear();
+    strip.show();
+  } else {
+    // Включили ручной режим - восстанавливаем сохраненное состояние дома
+    strip.clear();
+    for (int f = 1; f <= 19; f++) {
+      for (int r = 1; r <= 8; r++) {
+        if (roomStates[f][r]) {
+          applyRoomOn(f, r);
+        }
+      }
+    }
+    strip.show();
+  }
 }
 
 void setColorPreset(uint32_t color) {
@@ -144,6 +159,7 @@ void applyFloorOn(int floor) {
   setRelay(true);
   
 #ifdef TEST_10_LEDS
+  if (floor != 1) return;
   // Для теста 10 светодиодов: включаем светодиоды 0..7 для комнат 1..8
   for (int r = 1; r <= 8; r++) {
     roomStates[floor][r] = true;
@@ -199,6 +215,7 @@ void applyFloorOff(int floor) {
   }
 
 #ifdef TEST_10_LEDS
+  if (floor != 1) return;
   // Для теста 10 светодиодов: гасим светодиоды 0..7
   for (int r = 1; r <= 8; r++) {
     strip.setPixelColor(r - 1, strip.Color(0, 0, 0));
@@ -225,6 +242,7 @@ void applyRoomOn(int floor, int room) {
   uint32_t color = getRoomColor(floor, room);
 
 #ifdef TEST_10_LEDS
+  if (floor != 1) return;
   // Для теста 10 светодиодов: маппим комнаты 1..8 на светодиоды 0..7
   strip.setPixelColor(room - 1, color);
 #else
@@ -266,6 +284,7 @@ void applyRoomOff(int floor, int room) {
   roomStates[floor][room] = false;
 
 #ifdef TEST_10_LEDS
+  if (floor != 1) return;
   // Для теста 10 светодиодов: гасим светодиод этой комнаты
   strip.setPixelColor(room - 1, strip.Color(0, 0, 0));
 #else
@@ -307,6 +326,16 @@ void applyCommand(const String &value) {
     int window = value.substring(wPos + 1, sPos).toInt();
     String state = value.substring(sPos + 1);
 
+    if (autoMode && state != "2") {
+      setModeAuto(false);
+    }
+
+    if (state == "3") {
+      // Специальная команда для выхода из режима авто.
+      // Код выше уже вызвал setModeAuto(false), так что просто выходим.
+      return;
+    }
+
     if (state == "1") {
       if (floor == 0 && window == 0) {
         setRelay(true);
@@ -344,26 +373,19 @@ void applyCommand(const String &value) {
         for (int f = 1; f <= 19; f++) {
           for (int r = 1; r <= 8; r++) {
             roomColors[f][r] = colorIdx;
-          }
-          bool floorActive = false;
-          for (int r = 1; r <= 8; r++) {
-            if (roomStates[f][r]) floorActive = true;
-          }
-          if (floorActive) {
-            applyFloorOn(f);
+            // Обновляем физически только те комнаты, которые уже включены
+            if (roomStates[f][r]) {
+              applyRoomOn(f, r);
+            }
           }
         }
       } else if (window == 0) {
         // Change color for a specific floor
         for (int r = 1; r <= 8; r++) {
           roomColors[floor][r] = colorIdx;
-        }
-        bool floorActive = false;
-        for (int r = 1; r <= 8; r++) {
-          if (roomStates[floor][r]) floorActive = true;
-        }
-        if (floorActive) {
-          applyFloorOn(floor);
+          if (roomStates[floor][r]) {
+            applyRoomOn(floor, r);
+          }
         }
       } else {
         // Change color for a specific room
@@ -380,27 +402,26 @@ void runAutoAnimation() {
   }
 
   const unsigned long now = millis();
-  if (now - lastAutoTick < 100) {
+  // Около 20 кадров в секунду для бегущего огонька
+  if (now - lastAutoTick < 50) {
     return;
   }
 
   lastAutoTick = now;
-  autoStep++;
 
-  if (autoStep < 500) {
-    const int index = random(LED_COUNT);
-    strip.setPixelColor(index, currentColor);
-    strip.show();
-  } else if (autoStep < 1500) {
-    const int index = random(LED_COUNT);
-    strip.setPixelColor(index, strip.Color(0, 0, 0));
-    strip.show();
-  } else if (autoStep == 2200) {
-    setRelay(false);
-    clearAll();
-  } else if (autoStep > 2700) {
+  // Гасим предыдущий пиксель
+  strip.setPixelColor(autoStep, strip.Color(0, 0, 0));
+
+  // Сдвигаем на следующий пиксель
+  autoStep++;
+  if (autoStep >= LED_COUNT) {
     autoStep = 0;
   }
+
+  // Включаем текущий пиксель белым цветом
+  strip.setPixelColor(autoStep, strip.Color(255, 255, 255));
+  
+  strip.show();
 }
 
 void handlePing() {

@@ -117,7 +117,13 @@ class MainActivity : AppCompatActivity() {
         btnFloorOn?.setOnClickListener { controlManager.turnOnFloor(controlManager.uiState.value.selectedFloor) }
         btnFloorOff?.setOnClickListener { controlManager.turnOffFloor(controlManager.uiState.value.selectedFloor) }
         btnAllOn?.setOnClickListener { controlManager.turnOnAll() }
-        btnAuto?.setOnClickListener { controlManager.setAutoMode() }
+        btnAuto?.setOnClickListener {
+            if (controlManager.uiState.value.currentMode == "Auto") {
+                controlManager.setManualMode()
+            } else {
+                controlManager.setAutoMode()
+            }
+        }
         btnOff?.setOnClickListener { controlManager.turnOffAll() }
 
         findViewById<View>(R.id.btnMainColorDefault)?.setOnClickListener {
@@ -137,7 +143,7 @@ class MainActivity : AppCompatActivity() {
         updateRoomButtons(controlManager.uiState.value)
     }
 
-    private fun updateControlsState(isConnected: Boolean, canInteractOffline: Boolean) {
+    private fun updateControlsState(hasHost: Boolean, canInteractOffline: Boolean) {
         val floorChipGroup = findViewById<ChipGroup>(R.id.floorChipGroup)
         val btnFloorOn = findViewById<MaterialButton>(R.id.btnFloorOn)
         val btnFloorOff = findViewById<MaterialButton>(R.id.btnFloorOff)
@@ -149,7 +155,7 @@ class MainActivity : AppCompatActivity() {
         val btnColorYellow = findViewById<View>(R.id.btnMainColorYellow)
         val btnColorRed = findViewById<View>(R.id.btnMainColorRed)
 
-        val canInteract = isConnected || canInteractOffline
+        val canInteract = hasHost || canInteractOffline
         val alpha = if (canInteract) 1.0f else 0.5f
 
         floorChipGroup?.isEnabled = canInteract
@@ -243,7 +249,7 @@ class MainActivity : AppCompatActivity() {
                 controlManager.uiState.collect { state ->
                     updateUI(state)
                     updateRoomButtons(state)
-                    updateControlsState(state.isConnected, state.allowOfflineInteraction)
+                    updateControlsState(state.esp32Host.isNotBlank(), state.allowOfflineInteraction)
                 }
             }
         }
@@ -262,11 +268,22 @@ class MainActivity : AppCompatActivity() {
                 R.string.status_device_not_connected
             )
         }
+
+        val btnAuto = findViewById<MaterialButton>(R.id.btnAuto)
+        if (state.currentMode == "Auto") {
+            btnAuto?.text = "Вернуться к дому"
+            btnAuto?.backgroundTintList = androidx.core.content.ContextCompat.getColorStateList(this, R.color.brand_primary)
+            btnAuto?.setTextColor(androidx.core.content.ContextCompat.getColor(this, R.color.brand_on_primary))
+        } else {
+            btnAuto?.text = "Световое шоу"
+            btnAuto?.backgroundTintList = androidx.core.content.ContextCompat.getColorStateList(this, R.color.surface_panel)
+            btnAuto?.setTextColor(androidx.core.content.ContextCompat.getColor(this, R.color.on_surface_main))
+        }
     }
 
     private fun updateRoomButtons(state: ControlUiState) {
         val activeRooms = state.roomStates[state.selectedFloor] ?: emptySet()
-        val canInteract = state.isConnected || state.allowOfflineInteraction
+        val canInteract = state.esp32Host.isNotBlank() || state.allowOfflineInteraction
 
         roomButtons.forEachIndexed { index, button ->
             val roomNumber = index + 1
