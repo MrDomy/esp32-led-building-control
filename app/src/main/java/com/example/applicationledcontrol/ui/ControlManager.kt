@@ -192,7 +192,7 @@ class ControlManager : ViewModel() {
             )
         }
 
-        launchCommands(listOf(BuildingProtocol.RELAY_ON, BuildingProtocol.COMMAND_ALL_ON))
+        launchCommands(listOf(BuildingProtocol.COMMAND_ALL_ON))
     }
 
     fun turnOffAll() {
@@ -258,7 +258,6 @@ class ControlManager : ViewModel() {
 
         launchCommands(
             listOf(
-                BuildingProtocol.RELAY_ON,
                 BuildingProtocol.getRoomCommand(floor, room)
             )
         )
@@ -283,7 +282,6 @@ class ControlManager : ViewModel() {
 
         launchCommands(
             listOf(
-                BuildingProtocol.RELAY_ON,
                 BuildingProtocol.getFloorCommand(floor)
             )
         )
@@ -351,6 +349,6 @@ class ControlManager : ViewModel() {
                 isRelayActive = true
             )
         }
-        launchCommands(listOf(BuildingProtocol.RELAY_ON, colorCommand))
+        launchCommands(listOf(colorCommand))
     }
 }
